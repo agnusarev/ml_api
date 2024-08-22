@@ -8,6 +8,8 @@ packages = [{include = "ml_api", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+pandas = "^2.2.2"
+scikit-learn = "^1.5.1"
 
 
 [tool.poetry.group.dev.dependencies]
