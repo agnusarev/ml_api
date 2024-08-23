@@ -13,6 +13,6 @@ linting:
 mypy:
 	poetry run mypy src
 
-# .PHONY: log_analyzer
-# log_analyzer:
-# 	poetry run python src/log_analyzer/log_analyzer.py
+.PHONY: run_server
+run_server:
+	poetry run uvicorn --app-dir src ml_api.main:app

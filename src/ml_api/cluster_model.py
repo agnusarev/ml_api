@@ -6,9 +6,9 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
-DATA_NUMERIC = ["Age", "Credit amount", "Duration"]
-FILLNA_COLS = ["Saving accounts", "Checking account"]
-DROP_COLUMNS = ["Unnamed: 0"]
+DATA_NUMERIC = ["age", "credit_amount", "duration"]
+FILLNA_COLS = ["save_account", "check_account"]
+DROP_COLUMNS = ["id", "cluster"]
 
 
 def read_data(path: Path) -> pd.DataFrame:
@@ -38,7 +38,7 @@ def clustering_data(df: pd.DataFrame) -> pd.DataFrame:
     _proc_data = preprocessing_data(df)
     _pca_data = linear_dimensionality_reduction(_proc_data)
     kmeans = KMeans(n_clusters=2, random_state=10).fit(_pca_data)
-    df["Cluster"] = pd.Series(kmeans.labels_, dtype="int64")
+    df["cluster"] = pd.Series(kmeans.labels_, dtype="int64")
     return df
 
 
@@ -48,8 +48,13 @@ if __name__ == "__main__":
         / "tests/data/german_credit_data.csv"
     )
     _data = read_data(_path)
-    clustering_data(_data).to_csv(
+    # clustering_data(_data).to_csv(
+    #     Path(__file__).resolve().parent.parent.parent
+    #     / "tests/data/german_credit_data_testing.csv",
+    #     index=False,
+    # )
+    clustering_data(_data).drop("Cluster", axis=1).to_json(
         Path(__file__).resolve().parent.parent.parent
-        / "tests/data/german_credit_data_testing.csv",
-        index=False,
+        / "tests/data/german_credit_data_testing1.json",
+        orient="records",
     )
