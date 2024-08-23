@@ -10,6 +10,8 @@ packages = [{include = "ml_api", from = "src"}]
 python = "^3.12"
 pandas = "^2.2.2"
 scikit-learn = "^1.5.1"
+fastapi = "^0.112.1"
+uvicorn = "^0.30.6"
 
 
 [tool.poetry.group.dev.dependencies]
