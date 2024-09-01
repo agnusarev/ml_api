@@ -49,3 +49,18 @@ make test
     }
 ]
 ````
+
+## .env example
+
+<table>
+    <tr>
+        <th>variable</th>
+        <th>value</th>
+    </tr>
+    <tr>
+        <td>SECRET_KEY</td><td></td>
+    </tr>
+    <tr>
+        <td>ALGORITHM</td><td></td>
+    </tr>
+</table>
