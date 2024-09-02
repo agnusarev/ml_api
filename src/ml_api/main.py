@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional, Union
+from typing import Annotated, Any, List, Optional, Union
 
 import jwt
 import pandas as pd
@@ -38,6 +38,7 @@ class Item(BaseModel):
 
 class User(BaseModel):
     username: str
+    role: str
     email: str
     age: int
 
@@ -55,6 +56,7 @@ fake_users_db = {
         "hashed_password": pwd_context.hash("secret"),
         "email": "john@example.com",
         "age": 25,
+        "role": "admin",
     },
 }
 
@@ -106,7 +108,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user["username"]}, expires_delta=access_token_expires  # type: ignore
+        data={"sub": user["username"], "role": user["role"]}, expires_delta=access_token_expires  # type: ignore
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -119,8 +121,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
+        print(payload)
         username: str = payload.get("sub")
-        if username is None:
+        role: str = payload.get("role")
+        if username is None or role is None:
             raise credentials_exception
         token_data = TokenData(username=username)
     except jwt.PyJWTError:
@@ -131,9 +135,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     return user
 
 
+class RoleChecker:
+    def __init__(self, allowed_roles: Any) -> None:
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, user: Annotated[User, Depends(get_current_user)]) -> bool:
+        if user["role"] in self.allowed_roles:  # type: ignore
+            return True
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You don't have enough permissions",
+        )
+
+
 @app.post("/cluster/")
 async def cluster_data(
-    items: List[Item], current_user: User = Depends(get_current_user)
+    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))],
+    items: List[Item],
+    current_user: User = Depends(get_current_user),
 ) -> None:
     df = pd.DataFrame([item.model_dump() for item in items])
     _cluster_df = clustering_data(df)
